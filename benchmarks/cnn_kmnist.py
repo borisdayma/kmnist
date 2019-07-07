@@ -6,12 +6,6 @@
 # Train a small CNN to identify 10 Japanese characters in classical script
 # Based on MNIST CNN from Keras' examples: https://github.com/keras-team/keras/blob/master/examples/mnist_cnn.py (MIT License)
 
-
-# TODO: data augmentation
-# TODO: batch norm
-# TODO: regularization (l2…)
-# TODO: https://keras.io/examples/cifar10_resnet/
-
 from __future__ import print_function
 
 import tensorflow as tf
@@ -40,7 +34,7 @@ import random
 # you can modify these below or via command line
 MODEL_NAME = ""
 DATA_HOME = "./dataset" 
-BATCH_SIZE = 2**random.randint(5, 10)  # 8, 16, 32, 64, 128, 256, 512, 1024
+BATCH_SIZE = 2**random.randint(5, 10)  # 32, 64, 128, 256, 512, 1024
 EPOCHS = 100
 FILTERS_INIT = 2**random.randint(4, 6)  # 16, 32, 64
 DROPOUT = random.uniform(0, 1)
@@ -50,6 +44,7 @@ CONV_PER_BLOCK = random.randint(1, 4)
 NUM_CLASSES = 10
 LEARNING_RATE = 10 ** random.uniform(-4, -2)
 #NUM_CLASSES_K49 = 49
+SUBTRACT_PIXEL_MEAN = random.choice([True, False])
 
 # input image dimensions
 img_rows, img_cols = 28, 28
@@ -72,7 +67,8 @@ def train_cnn(args):
     "blocks": BLOCKS,
     "conv_per_block": CONV_PER_BLOCK,
     "fc_size": FC_SIZE,
-    "learning_rate": LEARNING_RATE
+    "learning_rate": LEARNING_RATE,
+    "subtract_pixel_mean": SUBTRACT_PIXEL_MEAN
   }
   wandb.config.update(config)
 
@@ -91,12 +87,18 @@ def train_cnn(args):
   x_test = x_test.astype('float32')
   x_train /= 255
   x_test /= 255
+
+  # If subtract pixel mean is enabled
+  if SUBTRACT_PIXEL_MEAN:
+    x_train_mean = np.mean(x_train, axis=0)
+    x_train -= x_train_mean
+    x_test -= x_train_mean
  
   # Data augmentation
   datagen = ImageDataGenerator(
-    rotation_range=20,
-    width_shift_range=0.2,
-    height_shift_range=0.2)
+    rotation_range=10,
+    width_shift_range=0.1,
+    height_shift_range=0.1)
   datagen.fit(x_train)
  
   N_TRAIN = len(x_train)
@@ -108,10 +110,7 @@ def train_cnn(args):
   y_train = tf.keras.utils.to_categorical(y_train, NUM_CLASSES)
   y_test = tf.keras.utils.to_categorical(y_test, NUM_CLASSES)
 
-  # Build model (from https://keras.io/examples/cifar10_resnet/)
-
-
-
+  # Build model (inspired from https://keras.io/examples/cifar10_resnet/)
   model = tf.keras.Sequential()
   filters = FILTERS_INIT
   model.add(layers.Conv2D(filters, kernel_size=(3, 3),
@@ -133,7 +132,6 @@ def train_cnn(args):
       model.add(layers.Activation('relu'))
       model.add(layers.Dropout(DROPOUT / 2))
   model.add(layers.GlobalAveragePooling2D())
-  model.add(layers.Dropout(DROPOUT))
   model.add(layers.Dense(NUM_CLASSES, activation='softmax'))
 
   model.compile(loss="categorical_crossentropy",
