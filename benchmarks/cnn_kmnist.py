@@ -132,6 +132,7 @@ def train_cnn(args):
       model.add(layers.Activation('relu'))
       model.add(layers.Dropout(DROPOUT / 2))
   model.add(layers.GlobalAveragePooling2D())
+  model.add(layers.Dropout(DROPOUT))
   model.add(layers.Dense(NUM_CLASSES, activation='softmax'))
 
   model.compile(loss="categorical_crossentropy",
