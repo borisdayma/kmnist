@@ -32,14 +32,13 @@ import random
 
 # default configuration / hyperparameter values
 # you can modify these below or via command line
-MODEL_NAME = ""
 DATA_HOME = "./dataset" 
 BATCH_SIZE = 2**random.randint(5, 10)  # 32, 64, 128, 256, 512, 1024
 EPOCHS = 100
 FILTERS_INIT = 2**random.randint(4, 6)  # 16, 32, 64
 DROPOUT = random.uniform(0, 1)
 FC_SIZE = 2 ** random.randint(7, 11)  # 128, 256, 512, 1024, 2056
-BLOCKS = random.randint(1, 5)         # resolution too low to have many max pools
+BLOCKS = random.randint(3, 5)         # resolution too low to have many max pools
 CONV_PER_BLOCK = random.randint(1, 4)
 NUM_CLASSES = 10
 LEARNING_RATE = 10 ** random.uniform(-4, -2)
